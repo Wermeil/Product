@@ -1,0 +1,5 @@
+package: handlers
+generate:
+  models: true
+  strict-server: true
+  echo-server: true

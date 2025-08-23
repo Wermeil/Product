@@ -1,0 +1,186 @@
+openapi: 3.0.0
+info:
+  title: user api
+  version: 1.0.0
+
+paths:
+  /user:
+    get:
+      summary: Get all user
+      tags:
+        - users
+      responses:
+        '200':
+          description: array user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/users'
+    post:
+      summary: Create user
+      tags:
+        - users
+      requestBody:
+        description: user object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/users'
+      responses:
+        '201':
+          description: create
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users'
+  /user/{id}:
+    patch:
+      summary: change user
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        description: body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/users'
+      responses:
+        '200':
+          description: change
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/users'
+    delete:
+      summary: delete user
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '204':
+          description: delete
+  /task:
+    get:
+      summary: Get all tasks
+      tags:
+        - tasks
+      responses:
+        "200":
+          description: tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/tasks"
+    post:
+      summary: Create Task
+      tags:
+        - tasks
+      requestBody:
+        description: task
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/tasks"
+      responses:
+        "201":
+          description: tasks complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/tasks"
+  /tasks/{id}:
+    patch:
+      summary: ChangeTask
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        description: task
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/tasks"
+      responses:
+        "200":
+          description: tasks changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/tasks"
+    delete:
+      summary: delete tasks
+      tags:
+        - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        204:
+          description: deleted
+
+
+
+components:
+  schemas:
+    users:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+        email:
+          type: string
+        password:
+          type: string
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/tasks"
+    tasks:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+        taskName:
+          type: string
+        isDone:
+          type: boolean
+        userId:
+          type: integer
+          format: uint
