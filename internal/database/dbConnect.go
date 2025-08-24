@@ -1,17 +1,16 @@
 package database
 
 import (
+	"Ctrl/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
 )
 
-var db *gorm.DB
-
-func InitDB() (*gorm.DB, error) {
-	dsn := "host=localhost user=postgres password=yourpassword dbname=postgres port=5432 sslmode=disable"
+func InitDB(cfg *config.Config) (*gorm.DB, error) {
+	dsn := cfg.GetDBDSN()
 	var err error
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("database error %v", err)
 	}

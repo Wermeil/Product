@@ -1,16 +1,22 @@
 package app
 
 import (
+	"Ctrl/internal/config"
 	"Ctrl/internal/database"
 	userService2 "Ctrl/internal/services"
 	"Ctrl/internal/transport/http"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
 )
 
 func Run() {
-	data, err := database.InitDB()
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: .env file not found: %v", err)
+	}
+	cfg := config.Load()
+	data, err := database.InitDB(cfg)
 	if err != nil {
 		log.Fatalf("database dead %v", err)
 	}
