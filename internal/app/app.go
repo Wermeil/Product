@@ -3,15 +3,17 @@ package app
 import (
 	"Ctrl/internal/config"
 	"Ctrl/internal/database"
-	userService2 "Ctrl/internal/services"
+	Service "Ctrl/internal/services"
 	"Ctrl/internal/transport/http"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
+	"time"
 )
 
 func Run() {
+	time.Sleep(3 * time.Second) // Ждем 3 секунды
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Warning: .env file not found: %v", err)
 	}
@@ -26,10 +28,10 @@ func Run() {
 	e.Use(middleware.Logger())
 
 	taskRepo := database.NewTaskRepository(data)
-	taskService := userService2.NewTaskService(taskRepo)
+	taskService := Service.NewTaskService(taskRepo)
 
 	userRepo := database.NewUserRepository(data)
-	userServices := userService2.NewUserService(userRepo, taskService)
+	userServices := Service.NewUserService(userRepo, taskService)
 
 	userHandler := http.NewUserHandler(userServices)
 	taskHandler := http.NewTaskHandler(taskService)

@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 type Config struct {
 	// Database
@@ -10,9 +13,19 @@ type Config struct {
 	DBPassword string
 	DBName     string
 	DBSSLMode  string
+	Redis      RedisConfig
+}
+type RedisConfig struct {
+	Addr     string // Адрес, например: "localhost:6379"
+	Password string // Пароль (если есть)
+	DB       int    // Номер базы данных (по умолчанию 0)
 }
 
 func Load() *Config {
+	redisDB, err := strconv.Atoi(os.Getenv("REDIS_DB")) // Преобразуем строку в int
+	if err != nil {
+		return nil
+	}
 	return &Config{
 		DBHost:     os.Getenv("DB_HOST"),
 		DBPort:     os.Getenv("DB_PORT"),
@@ -20,6 +33,11 @@ func Load() *Config {
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		DBName:     os.Getenv("DB_NAME"),
 		DBSSLMode:  os.Getenv("DB_SSLMODE"),
+		Redis: RedisConfig{
+			Addr:     os.Getenv("REDIS_ADDR"),
+			Password: os.Getenv("REDIS_PASSWORD"),
+			DB:       redisDB,
+		},
 	}
 }
 func (c *Config) GetDBDSN() string {
