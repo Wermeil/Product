@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	t "Ctrl/internal/tasksService"
-	taskMod "Ctrl/internal/tasksService"
-	u "Ctrl/internal/userService"
-	userMod "Ctrl/internal/userService"
+	"Ctrl/internal/models"
+	userService2 "Ctrl/internal/services"
 	"context"
 	"fmt"
 )
@@ -15,17 +13,17 @@ type CombinedHandler struct {
 }
 
 type TaskHandlerService struct {
-	taskService t.TasksService
+	taskService userService2.TasksService
 }
 type UserHandlerService struct {
-	userService u.UserService
+	userService userService2.UserService
 }
 
-func NewUserHandler(u u.UserService) *UserHandlerService {
+func NewUserHandler(u userService2.UserService) *UserHandlerService {
 	return &UserHandlerService{userService: u}
 }
 
-func NewTaskHandler(t t.TasksService) *TaskHandlerService {
+func NewTaskHandler(t userService2.TasksService) *TaskHandlerService {
 	return &TaskHandlerService{taskService: t}
 }
 
@@ -48,7 +46,7 @@ func (t *TaskHandlerService) GetTask(ctx context.Context, request GetTaskRequest
 }
 
 func (t *TaskHandlerService) PostTask(ctx context.Context, request PostTaskRequestObject) (PostTaskResponseObject, error) {
-	body := taskMod.Tasks{
+	body := models.Tasks{
 		IsDone:   *request.Body.IsDone,
 		TaskName: *request.Body.TaskName,
 		UserId:   uint(*request.Body.UserId),
@@ -79,7 +77,7 @@ func (t *TaskHandlerService) PatchTasksId(ctx context.Context, request PatchTask
 	idString := fmt.Sprintf("%v", request.Id)
 	id := uint(request.Id)
 	userId := uint(*request.Body.UserId)
-	task := taskMod.Tasks{
+	task := models.Tasks{
 		ID:       id,
 		TaskName: *request.Body.TaskName,
 		IsDone:   *request.Body.IsDone,
@@ -129,7 +127,7 @@ func (u *UserHandlerService) GetUser(ctx context.Context, request GetUserRequest
 }
 
 func (u *UserHandlerService) PostUser(ctx context.Context, request PostUserRequestObject) (PostUserResponseObject, error) {
-	body := userMod.Users{
+	body := models.Users{
 		Email:    *request.Body.Email,
 		Password: *request.Body.Password,
 	}
@@ -158,7 +156,7 @@ func (u *UserHandlerService) DeleteUserId(ctx context.Context, request DeleteUse
 func (u *UserHandlerService) PatchUserId(ctx context.Context, request PatchUserIdRequestObject) (PatchUserIdResponseObject, error) {
 	id := fmt.Sprintf("%v", request.Id)
 	userID := uint(request.Id)
-	user := userMod.Users{
+	user := models.Users{
 		Email:    *request.Body.Email,
 		Password: *request.Body.Password,
 	}

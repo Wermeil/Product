@@ -1,4 +1,4 @@
-package tasksService
+package models
 
 type Tasks struct {
 	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`

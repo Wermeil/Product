@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"gorm.io/driver/postgres"
@@ -13,7 +13,7 @@ func InitDB() (*gorm.DB, error) {
 	var err error
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("db error %v", err)
+		log.Fatalf("database error %v", err)
 	}
 	return db, nil
 }
