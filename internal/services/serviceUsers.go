@@ -3,6 +3,10 @@ package services
 import (
 	"Ctrl/internal/database"
 	"Ctrl/internal/models"
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
 )
 
 type UserService interface {
@@ -28,19 +32,66 @@ func NewUserService(userRepo database.UserRepository, tasksService TasksService,
 }
 
 func (s *Repo) GetTasksForUser(userID uint) ([]models.Tasks, error) {
-	return s.tasksService.GetTaskByUserId(userID)
+	tasksRedisId := fmt.Sprintf("users:task:%v", userID)
+
+	val, err := s.redisService.Get(context.Background(), tasksRedisId)
+	if err == nil {
+		var tasks []models.Tasks
+		json.Unmarshal([]byte(val), &tasks)
+		return tasks, nil
+	}
+	vaw, err := s.tasksService.GetTaskByUserId(userID)
+	if err != nil {
+		return []models.Tasks{}, nil
+	}
+	s.redisService.SetJSON(context.Background(), tasksRedisId, vaw, 10*time.Minute)
+	return vaw, nil
 }
 
 func (s *Repo) GetUser() ([]models.Users, error) {
-	return s.repo.GetAllUser()
+	redisId := "users:all"
+
+	val, err := s.redisService.Get(context.Background(), redisId)
+	if err == nil {
+		var user []models.Users
+		json.Unmarshal([]byte(val), &user)
+		return user, nil
+	}
+
+	user, err := s.repo.GetAllUser()
+	if err != nil {
+		return []models.Users{}, err
+	}
+	s.redisService.SetJSON(context.Background(), redisId, user, 10*time.Minute)
+	return user, nil
 }
 
 func (s *Repo) CreateUser(user models.Users) (models.Users, error) {
-	return s.repo.CreateUser(user)
+	result, err := s.repo.CreateUser(user)
+	if err != nil {
+		return models.Users{}, err
+	}
+	return result, nil
 }
 
 func (s *Repo) GetUserById(id string) (models.Users, error) {
-	return s.repo.GetUserById(id)
+	cachedKey := fmt.Sprintf("users:%s", id)
+
+	val, err := s.redisService.Get(context.Background(), cachedKey)
+	if err == nil {
+		var user models.Users
+		json.Unmarshal([]byte(val), &user)
+		return user, nil
+	}
+
+	user, err := s.repo.GetUserById(id)
+	if err != nil {
+		return models.Users{}, err
+	}
+
+	userJson, _ := json.Marshal(user)
+	s.redisService.Set(context.Background(), cachedKey, userJson, 10*time.Minute)
+	return user, nil
 }
 
 func (s *Repo) ChangeUserById(id string, us models.Users) error {

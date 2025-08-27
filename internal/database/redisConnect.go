@@ -3,6 +3,7 @@ package database
 import (
 	"Ctrl/internal/config"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"time"
@@ -45,4 +46,9 @@ func (r *RedisClient) Delete(ctx context.Context, key string) error {
 func (r *RedisClient) Exists(ctx context.Context, key string) (bool, error) {
 	result, err := r.client.Exists(ctx, key).Result()
 	return result > 0, err
+}
+
+func (r *RedisClient) SetJSON(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
+	jsonData, _ := json.Marshal(value) // ← тот же Marshal внутри!
+	return r.Set(ctx, key, jsonData, ttl)
 }
