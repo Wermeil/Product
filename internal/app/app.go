@@ -22,6 +22,11 @@ func Run() {
 	if err != nil {
 		log.Fatalf("database dead %v", err)
 	}
+	redisClient, err := database.NewRedisClient(&cfg.Redis)
+	if err != nil {
+		log.Printf("Redis warning: %v (continuing without cache)", err)
+		// Можно продолжить без Redis, если он не критичен
+	}
 
 	e := echo.New()
 	e.Use(middleware.CORS())
@@ -31,7 +36,7 @@ func Run() {
 	taskService := Service.NewTaskService(taskRepo)
 
 	userRepo := database.NewUserRepository(data)
-	userServices := Service.NewUserService(userRepo, taskService)
+	userServices := Service.NewUserService(userRepo, taskService, redisClient)
 
 	userHandler := http.NewUserHandler(userServices)
 	taskHandler := http.NewTaskHandler(taskService)

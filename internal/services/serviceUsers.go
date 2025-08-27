@@ -16,17 +16,19 @@ type UserService interface {
 type Repo struct {
 	repo         database.UserRepository
 	tasksService TasksService
+	redisService *database.RedisClient
+}
+
+func NewUserService(userRepo database.UserRepository, tasksService TasksService, redisServ *database.RedisClient) *Repo {
+	return &Repo{
+		repo:         userRepo,
+		tasksService: tasksService, // ← сохраняем зависимость
+		redisService: redisServ,
+	}
 }
 
 func (s *Repo) GetTasksForUser(userID uint) ([]models.Tasks, error) {
 	return s.tasksService.GetTaskByUserId(userID)
-}
-
-func NewUserService(userRepo database.UserRepository, tasksService TasksService) *Repo {
-	return &Repo{
-		repo:         userRepo,
-		tasksService: tasksService, // ← сохраняем зависимость
-	}
 }
 
 func (s *Repo) GetUser() ([]models.Users, error) {
