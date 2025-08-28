@@ -14,11 +14,16 @@ type Config struct {
 	DBName     string
 	DBSSLMode  string
 	Redis      RedisConfig
+	Kafka      KafkaConfig
 }
 type RedisConfig struct {
 	Addr     string // Адрес, например: "localhost:6379"
 	Password string // Пароль (если есть)
 	DB       int    // Номер базы данных (по умолчанию 0)
+}
+type KafkaConfig struct {
+	Broker string // например: "localhost:9092"
+	Topic  string // например: "user-events"
 }
 
 func Load() *Config {
@@ -37,6 +42,10 @@ func Load() *Config {
 			Addr:     os.Getenv("REDIS_ADDR"),
 			Password: os.Getenv("REDIS_PASSWORD"),
 			DB:       redisDB,
+		},
+		Kafka: KafkaConfig{
+			Broker: os.Getenv("KAFKA_BROKER"),
+			Topic:  os.Getenv("KAFKA_TOPIC"),
 		},
 	}
 }

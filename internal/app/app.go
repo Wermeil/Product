@@ -24,8 +24,7 @@ func Run() {
 	}
 	redisClient, err := database.NewRedisClient(&cfg.Redis)
 	if err != nil {
-		log.Printf("Redis warning: %v (continuing without cache)", err)
-		// Можно продолжить без Redis, если он не критичен
+		log.Fatal("Redis warning: %v (continuing without cache)", err)
 	}
 
 	e := echo.New()

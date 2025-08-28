@@ -36,16 +36,19 @@ func (s *Repo) GetTasksForUser(userID uint) ([]models.Tasks, error) {
 
 	val, err := s.redisService.Get(context.Background(), tasksRedisId)
 	if err == nil {
-		var tasks []models.Tasks
-		json.Unmarshal([]byte(val), &tasks)
-		return tasks, nil
+		var task []models.Tasks
+		if err := json.Unmarshal([]byte(val), &task); err != nil {
+			return []models.Tasks{}, err
+		}
 	}
-	vaw, err := s.tasksService.GetTaskByUserId(userID)
+	vag, err := s.tasksService.GetTaskByUserId(userID)
 	if err != nil {
-		return []models.Tasks{}, nil
+		return []models.Tasks{}, err
 	}
-	s.redisService.SetJSON(context.Background(), tasksRedisId, vaw, 10*time.Minute)
-	return vaw, nil
+	if err := s.redisService.SetJSON(context.Background(), tasksRedisId, vag, 10*time.Minute); err != nil {
+		return []models.Tasks{}, err
+	}
+	return vag, nil
 }
 
 func (s *Repo) GetUser() ([]models.Users, error) {
@@ -54,7 +57,9 @@ func (s *Repo) GetUser() ([]models.Users, error) {
 	val, err := s.redisService.Get(context.Background(), redisId)
 	if err == nil {
 		var user []models.Users
-		json.Unmarshal([]byte(val), &user)
+		if err := json.Unmarshal([]byte(val), &user); err != nil {
+			return nil, err
+		}
 		return user, nil
 	}
 
@@ -62,7 +67,9 @@ func (s *Repo) GetUser() ([]models.Users, error) {
 	if err != nil {
 		return []models.Users{}, err
 	}
-	s.redisService.SetJSON(context.Background(), redisId, user, 10*time.Minute)
+	if err := s.redisService.SetJSON(context.Background(), redisId, user, 10*time.Minute); err != nil {
+		return nil, err
+	}
 	return user, nil
 }
 
@@ -80,7 +87,9 @@ func (s *Repo) GetUserById(id string) (models.Users, error) {
 	val, err := s.redisService.Get(context.Background(), cachedKey)
 	if err == nil {
 		var user models.Users
-		json.Unmarshal([]byte(val), &user)
+		if err := json.Unmarshal([]byte(val), &user); err != nil {
+			return models.Users{}, err
+		}
 		return user, nil
 	}
 
@@ -90,13 +99,18 @@ func (s *Repo) GetUserById(id string) (models.Users, error) {
 	}
 
 	userJson, _ := json.Marshal(user)
-	s.redisService.Set(context.Background(), cachedKey, userJson, 10*time.Minute)
+	if err := s.redisService.Set(context.Background(), cachedKey, userJson, 10*time.Minute); err != nil {
+		return models.Users{}, err
+	}
 	return user, nil
 }
 
 func (s *Repo) ChangeUserById(id string, us models.Users) error {
 	use, err := s.repo.GetUserById(id)
 	if err != nil {
+		return err
+	}
+	if err := s.redisService.Delete(context.Background(), fmt.Sprintf("users:%v", use.ID)); err != nil {
 		return err
 	}
 	obj := models.Users{
@@ -111,5 +125,8 @@ func (s *Repo) ChangeUserById(id string, us models.Users) error {
 }
 
 func (s *Repo) DeleteUserById(id string) error {
+	if err := s.redisService.Delete(context.Background(), fmt.Sprintf("users:%v", id)); err != nil {
+		return err
+	}
 	return s.repo.DeleteUserById(id)
 }
