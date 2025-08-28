@@ -5,14 +5,25 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
+	"time"
 )
 
 func InitDB(cfg *config.Config) (*gorm.DB, error) {
 	dsn := cfg.GetDBDSN()
+	var db *gorm.DB
 	var err error
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("database error %v", err)
+
+	// Пытаемся подключиться несколько раз
+	for i := 0; i < 3; i++ {
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			log.Println("✅ Database connected successfully")
+			return db, nil
+		}
+
+		log.Printf("Attempt %d: Database connection failed: %v", i+1, err)
+		time.Sleep(3 * time.Second)
 	}
-	return db, nil
+
+	return nil, err
 }

@@ -13,11 +13,15 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=password123
       - DB_NAME=postgres
-      - REDIS_ADDR=redis:6379  # ← ДОБАВЬ
-      - REDIS_DB=0             # ← ДОБАВЬ
+      - REDIS_ADDR=redis:6379
+      - REDIS_DB=0
     depends_on:
       - postgres
-      - redis                  # ← ДОБАВЬ
+      - redis
+      - prometheus
+      - promtail
+      - loki
+      - grafana
     networks:
       - app-network
 
@@ -34,10 +38,47 @@ services:
     networks:
       - app-network
 
-  redis:                        # ← ДОБАВЬ ЭТОТ СЕРВИС
+  redis:
     image: redis:latest
     ports:
       - "6379:6379"
+    networks:
+      - app-network
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - app-network
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - app-network
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
     networks:
       - app-network
 

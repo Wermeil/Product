@@ -2,6 +2,7 @@ package services
 
 import (
 	"Ctrl/internal/database"
+	"Ctrl/internal/kafka"
 	"Ctrl/internal/models"
 	"context"
 	"encoding/json"
@@ -21,13 +22,15 @@ type Repo struct {
 	repo         database.UserRepository
 	tasksService TasksService
 	redisService *database.RedisClient
+	kafkaProd    *kafka.Producer
 }
 
-func NewUserService(userRepo database.UserRepository, tasksService TasksService, redisServ *database.RedisClient) *Repo {
+func NewUserService(userRepo database.UserRepository, tasksService TasksService, redisServ *database.RedisClient, kafkaProd *kafka.Producer) *Repo {
 	return &Repo{
 		repo:         userRepo,
 		tasksService: tasksService, // ← сохраняем зависимость
 		redisService: redisServ,
+		kafkaProd:    kafkaProd,
 	}
 }
 

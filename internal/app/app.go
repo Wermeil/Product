@@ -3,28 +3,28 @@ package app
 import (
 	"Ctrl/internal/config"
 	"Ctrl/internal/database"
+	"Ctrl/internal/kafka"
 	Service "Ctrl/internal/services"
-	"Ctrl/internal/transport/http"
+	rout "Ctrl/internal/transport/http"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
-	"time"
 )
 
 func Run() {
-	time.Sleep(3 * time.Second) // Ждем 3 секунды
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Warning: .env file not found: %v", err)
 	}
 	cfg := config.Load()
+	kafkaProducer := kafka.NewProducer(cfg.Kafka.Broker)
 	data, err := database.InitDB(cfg)
 	if err != nil {
 		log.Fatalf("database dead %v", err)
 	}
 	redisClient, err := database.NewRedisClient(&cfg.Redis)
 	if err != nil {
-		log.Fatal("Redis warning: %v (continuing without cache)", err)
+		log.Fatal("Redis warning: %v", err)
 	}
 
 	e := echo.New()
@@ -35,18 +35,18 @@ func Run() {
 	taskService := Service.NewTaskService(taskRepo)
 
 	userRepo := database.NewUserRepository(data)
-	userServices := Service.NewUserService(userRepo, taskService, redisClient)
+	userServices := Service.NewUserService(userRepo, taskService, redisClient, kafkaProducer)
 
-	userHandler := http.NewUserHandler(userServices)
-	taskHandler := http.NewTaskHandler(taskService)
+	userHandler := rout.NewUserHandler(userServices)
+	taskHandler := rout.NewTaskHandler(taskService)
 
-	combinedHandler := &http.CombinedHandler{
+	combinedHandler := &rout.CombinedHandler{
 		UserHandlerService: userHandler,
 		TaskHandlerService: taskHandler,
 	}
 
-	strictCombined := http.NewStrictHandler(combinedHandler, nil)
-	http.RegisterHandlers(e, strictCombined)
+	strictCombined := rout.NewStrictHandler(combinedHandler, nil)
+	rout.RegisterHandlers(e, strictCombined)
 
 	if err := e.Start(":8080"); err != nil {
 		log.Fatalf("server dead %v", err)
